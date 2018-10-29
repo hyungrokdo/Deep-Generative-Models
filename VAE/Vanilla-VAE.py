@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets('MNIST_data/', one_hot=False, reshape=False)
-z_dim = 50
+z_dim = 25
 
 def encoder(x_in, use_batchnorm=True, use_bias=True):
     reuse = tf.AUTO_REUSE
@@ -50,19 +50,19 @@ def decoder(z_in, use_batchnorm=True, use_bias=True):
     reuse = tf.AUTO_REUSE
     xavier_init, xavier_init_conv = tf.contrib.layers.xavier_initializer(uniform=False), tf.contrib.layers.xavier_initializer_conv2d(uniform=False)
     with tf.variable_scope('vae/decoder', reuse=reuse):
-        net = tf.layers.dense(inputs=z_in, units=7*7*32, kernel_initializer=xavier_init, use_bias=use_bias, name='layer1/dense', reuse=reuse)
-        net = tf.reshape(net, (-1, 7, 7, 32), name='layer1/reshape')
+        net = tf.layers.dense(inputs=z_in, units=7*7*16, kernel_initializer=xavier_init, use_bias=use_bias, name='layer1/dense', reuse=reuse)
+        net = tf.reshape(net, (-1, 7, 7, 16), name='layer1/reshape')
         if use_batchnorm:
             net = tf.layers.batch_normalization(inputs=net, training=is_train, axis=3, name='layer1/batchnorm', reuse=reuse)
         net = tf.nn.relu(net, name='layer1/act')
         
-        net = tf.layers.conv2d_transpose(inputs=net, filters=16, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
+        net = tf.layers.conv2d_transpose(inputs=net, filters=8, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
                                          kernel_initializer=xavier_init_conv, name='layer2/convtr', reuse=reuse)
         if use_batchnorm:
             net = tf.layers.batch_normalization(inputs=net, training=is_train, axis=3, name='layer2/batchnorm', reuse=reuse)
         net = tf.nn.relu(net, name='layer2/act')
         
-        net = tf.layers.conv2d_transpose(inputs=net, filters=8, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
+        net = tf.layers.conv2d_transpose(inputs=net, filters=4, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
                                          kernel_initializer=xavier_init_conv, name='layer3/convtr', reuse=reuse)
         if use_batchnorm:
             net = tf.layers.batch_normalization(inputs=net, training=is_train, axis=3, name='layer3/batchnorm', reuse=reuse)
@@ -90,7 +90,7 @@ z_sample           = sample_from_gaussian(z_mean, z_logvar)
 x_mean, x_logvar   = decoder(z_sample)
 
 kl_divergence  = -0.5*tf.reduce_sum(1+z_logvar-tf.square(z_mean)-tf.exp(z_logvar), axis=1)
-log_recon_prob = -0.5*(tf.reduce_sum(tf.squared_difference(x_in, x_mean)/(tf.exp(x_logvar)+1E-6), axis=[1, 2, 3]) + tf.reduce_sum(x_logvar, axis=[1, 2, 3]) + 784*np.log(2*np.pi))
+log_recon_prob = -0.5*(tf.reduce_sum(tf.squared_difference(x_in, x_mean)/tf.exp(x_logvar), axis=[1, 2, 3]) + tf.reduce_sum(x_logvar, axis=[1, 2, 3]))
 
 vae_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='vae')
 vae_loss = tf.reduce_mean(kl_divergence - log_recon_prob)
@@ -108,7 +108,7 @@ sess.run(tf.global_variables_initializer())
 train_dat = mnist.train.images
 n_train = len(train_dat)
 
-max_epoch = 250
+max_epoch = 100
 minibatch_size = 1000
 
 pbar = tqdm(range(max_epoch))
@@ -119,10 +119,7 @@ for epoch in pbar:
     train_idx = np.arange(n_train)
     np.random.shuffle(train_idx)
     train_batch = chunks(train_idx, minibatch_size)
-    
-    if epoch == 150:
-        vae_opt = vae_opt2
-        
+
     loss_stack, kld_stack, log_recon_prob_stack = [], [], []
     for batch_idx in train_batch:
         batch_dat = train_dat[batch_idx]
@@ -138,7 +135,7 @@ for epoch in pbar:
     
     pbar.set_description('Loss: {:.4f} | KLD: {:.4f} | Log-Recon-Prob: {:.4f}'.format(np.mean(loss_stack), np.mean(kld_stack), np.mean(log_recon_prob_stack)))
 
-batch_z = np.random.uniform(-1, 1, size=[16, z_dim])
+batch_z = np.random.uniform(-0.1, 0.1, size=[16, z_dim])
 batch_z, z_logvar_ = sess.run([z_mean, z_logvar], feed_dict={x_in:train_dat[np.random.choice(n_train, 16)], is_train: False})
 samples = sess.run(x_mean, feed_dict={z_sample: batch_z, is_train: False})
 import matplotlib.pyplot as plt 
@@ -148,3 +145,5 @@ for i, sample in enumerate(samples):
     plt.subplot(4, 4, i+1)
     plt.imshow(sample.reshape(28, 28), cmap='gray')
 plt.show()
+
+plt.plot(loss_traj)
