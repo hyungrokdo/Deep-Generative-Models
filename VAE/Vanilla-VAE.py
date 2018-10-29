@@ -77,18 +77,12 @@ def sample_from_gaussian(mean, logvar):
 def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i+n]
-        
-minibatch_size = 100
-max_epoch = 100
 
 is_train           = tf.placeholder(dtype=tf.bool, name='is_train')
 x_in               = tf.placeholder(dtype=tf.float32, shape=[None, 28, 28, 1])
 z_mean, z_logvar   = encoder(x_in)
 z_sample           = sample_from_gaussian(z_mean, z_logvar)
 x_mean, x_logvar   = decoder(z_sample)
-
-z_in               = tf.stop_gradient(tf.placeholder(dtype=tf.float32, shape=[None, z_dim]))
-x_mean_, x_logvar_ = decoder(z_in)
 
 kl_divergence  = -0.5*tf.reduce_sum(1+z_logvar-tf.square(z_mean)-tf.exp(z_logvar), axis=1)
 log_recon_prob = -0.5*(tf.reduce_sum(tf.squared_difference(x_in, x_mean)/tf.exp(x_logvar), axis=[1, 2, 3]) + tf.log(tf.reduce_sum(tf.exp(x_logvar), axis=[1, 2, 3])))
@@ -108,7 +102,7 @@ sess.run(tf.global_variables_initializer())
 train_dat = mnist.train.images
 n_train = len(train_dat)
 
-max_epoch = 200
+max_epoch = 100
 minibatch_size = 256
 
 pbar = tqdm(range(max_epoch))
@@ -130,7 +124,7 @@ for epoch in pbar:
     pbar.set_description('Loss: {:.4f} | KLD: {:.4f} | Log-Recon-Prob: {:.4f}'.format(np.mean(loss_stack), np.mean(kld_stack), np.mean(log_recon_prob_stack)))
 
 batch_z = np.random.uniform(-20, 20, size=[16, z_dim])
-samples = sess.run(x_mean_, feed_dict={z_in: batch_z, is_train: False})
+samples = sess.run(x_mean, feed_dict={z_sample: batch_z, is_train: False})
 import matplotlib.pyplot as plt
 
 plt.figure(figsize=(10, 10))
