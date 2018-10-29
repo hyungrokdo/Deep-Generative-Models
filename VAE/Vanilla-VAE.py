@@ -15,60 +15,65 @@ from tqdm import tqdm
 
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets('MNIST_data/', one_hot=False, reshape=False)
-input_width, input_height, input_channel = mnist.train.images[0].shape
 z_dim = 50
 
 def encoder(x_in, use_batchnorm=True, use_bias=True):
     reuse = tf.AUTO_REUSE
-    xavier_init, xavier_init_conv = tf.contrib.layers.xavier_initializer(uniform=True), tf.contrib.layers.xavier_initializer_conv2d(uniform=True)
-    with tf.variable_scope('encoder', reuse=reuse):
-        net = tf.layers.conv2d(inputs=x_in, filters=16, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
+    xavier_init, xavier_init_conv = tf.contrib.layers.xavier_initializer(uniform=False), tf.contrib.layers.xavier_initializer_conv2d(uniform=False)
+    with tf.variable_scope('vae/encoder', reuse=reuse):
+        net = tf.layers.conv2d(inputs=x_in, filters=4, kernel_size=(3, 3), strides=(1, 1), use_bias=use_bias, padding='same',
                                kernel_initializer=xavier_init_conv, name='layer1/conv', reuse=reuse)
         if use_batchnorm:
             net = tf.layers.batch_normalization(inputs=net, training=is_train, axis=3, name='layer1/batchnorm', reuse=reuse)
         net = tf.nn.leaky_relu(net, name='layer1/act')
         
-        net = tf.layers.conv2d(inputs=net, filters=32, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
+        net = tf.layers.conv2d(inputs=net, filters=8, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
                                kernel_initializer=xavier_init_conv, name='layer2/conv', reuse=reuse)
         if use_batchnorm:
             net = tf.layers.batch_normalization(inputs=net, training=is_train, axis=3, name='layer2/batchnorm', reuse=reuse)
         net = tf.nn.leaky_relu(net, name='layer2/act')
         
-        net = tf.layers.flatten(net, name='layer3/flatten')
-        
-        z_mean   = tf.layers.dense(inputs=net, units=z_dim, kernel_initializer=xavier_init, use_bias=use_bias, name='layer4/z_mean')
-        z_logvar = tf.layers.dense(inputs=net, units=z_dim, kernel_initializer=xavier_init, use_bias=use_bias, name='layer4/z_logvar')
-        
-    return z_mean, z_logvar
-
-def decoder(z_in, use_batchnorm=True, use_bias=True):
-    reuse = tf.AUTO_REUSE
-    xavier_init, xavier_init_conv = tf.contrib.layers.xavier_initializer(uniform=True), tf.contrib.layers.xavier_initializer_conv2d(uniform=True)
-    with tf.variable_scope('decoder', reuse=reuse):
-        net = tf.layers.dense(inputs=z_in, units=7*7*64, kernel_initializer=xavier_init, use_bias=use_bias, name='layer1/dense', reuse=reuse)
-        net = tf.reshape(net, (-1, 7, 7, 64), name='layer1/reshape')
-        if use_batchnorm:
-            net = tf.layers.batch_normalization(inputs=net, training=is_train, axis=3, name='layer1/batchnorm', reuse=reuse)
-        net = tf.nn.leaky_relu(net, name='layer1/act')
-        
-        net = tf.layers.conv2d_transpose(inputs=net, filters=32, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
-                                         kernel_initializer=xavier_init_conv, name='layer2/convtr', reuse=reuse)
-        if use_batchnorm:
-            net = tf.layers.batch_normalization(inputs=net, training=is_train, axis=3, name='layer2/batchnorm', reuse=reuse)
-        net = tf.nn.leaky_relu(net, name='layer2/act')
-        
-        net = tf.layers.conv2d_transpose(inputs=net, filters=16, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
-                                         kernel_initializer=xavier_init_conv, name='layer3/convtr', reuse=reuse)
+        net = tf.layers.conv2d(inputs=net, filters=16, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
+                               kernel_initializer=xavier_init_conv, name='layer3/conv', reuse=reuse)
         if use_batchnorm:
             net = tf.layers.batch_normalization(inputs=net, training=is_train, axis=3, name='layer3/batchnorm', reuse=reuse)
         net = tf.nn.leaky_relu(net, name='layer3/act')
         
-        x_mean   = tf.layers.conv2d_transpose(inputs=net, filters=1, kernel_size=(1, 1), strides=(1, 1), use_bias=use_bias, padding='same',
+        net = tf.layers.flatten(net, name='layer4/flatten')
+        
+        mean   = tf.layers.dense(inputs=net, units=z_dim, kernel_initializer=xavier_init, use_bias=use_bias, name='layer4/z_mean')
+        logvar = tf.layers.dense(inputs=net, units=z_dim, kernel_initializer=xavier_init, use_bias=use_bias, name='layer4/z_logvar')
+        
+    return mean, logvar
+
+def decoder(z_in, use_batchnorm=True, use_bias=True):
+    reuse = tf.AUTO_REUSE
+    xavier_init, xavier_init_conv = tf.contrib.layers.xavier_initializer(uniform=False), tf.contrib.layers.xavier_initializer_conv2d(uniform=False)
+    with tf.variable_scope('vae/decoder', reuse=reuse):
+        net = tf.layers.dense(inputs=z_in, units=7*7*32, kernel_initializer=xavier_init, use_bias=use_bias, name='layer1/dense', reuse=reuse)
+        net = tf.reshape(net, (-1, 7, 7, 32), name='layer1/reshape')
+        if use_batchnorm:
+            net = tf.layers.batch_normalization(inputs=net, training=is_train, axis=3, name='layer1/batchnorm', reuse=reuse)
+        net = tf.nn.relu(net, name='layer1/act')
+        
+        net = tf.layers.conv2d_transpose(inputs=net, filters=16, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
+                                         kernel_initializer=xavier_init_conv, name='layer2/convtr', reuse=reuse)
+        if use_batchnorm:
+            net = tf.layers.batch_normalization(inputs=net, training=is_train, axis=3, name='layer2/batchnorm', reuse=reuse)
+        net = tf.nn.relu(net, name='layer2/act')
+        
+        net = tf.layers.conv2d_transpose(inputs=net, filters=8, kernel_size=(3, 3), strides=(2, 2), use_bias=use_bias, padding='same',
+                                         kernel_initializer=xavier_init_conv, name='layer3/convtr', reuse=reuse)
+        if use_batchnorm:
+            net = tf.layers.batch_normalization(inputs=net, training=is_train, axis=3, name='layer3/batchnorm', reuse=reuse)
+        net = tf.nn.relu(net, name='layer3/act')
+
+        mean   = tf.layers.conv2d_transpose(inputs=net, filters=1, kernel_size=(3, 3), strides=(1, 1), use_bias=use_bias, padding='same',
                                             kernel_initializer=xavier_init_conv, name='layer4/x_mean', reuse=reuse)
-        x_logvar = tf.layers.conv2d_transpose(inputs=net, filters=1, kernel_size=(1, 1), strides=(1, 1), use_bias=use_bias, padding='same',
+        logvar = tf.layers.conv2d_transpose(inputs=net, filters=1, kernel_size=(3, 3), strides=(1, 1), use_bias=use_bias, padding='same',
                                             kernel_initializer=xavier_init_conv, name='layer4/x_logvar', reuse=reuse)
         
-    return x_mean, x_logvar
+    return mean, logvar
 
 def sample_from_gaussian(mean, logvar):
     eps = tf.random_normal(shape=tf.shape(mean))
@@ -85,14 +90,15 @@ z_sample           = sample_from_gaussian(z_mean, z_logvar)
 x_mean, x_logvar   = decoder(z_sample)
 
 kl_divergence  = -0.5*tf.reduce_sum(1+z_logvar-tf.square(z_mean)-tf.exp(z_logvar), axis=1)
-log_recon_prob = -0.5*(tf.reduce_sum(tf.squared_difference(x_in, x_mean)/tf.exp(x_logvar), axis=[1, 2, 3]) + tf.log(tf.reduce_sum(tf.exp(x_logvar), axis=[1, 2, 3])))
+log_recon_prob = -0.5*(tf.reduce_sum(tf.squared_difference(x_in, x_mean)/(tf.exp(x_logvar)+1E-6), axis=[1, 2, 3]) + tf.reduce_sum(x_logvar, axis=[1, 2, 3]) + 784*np.log(2*np.pi))
 
-vae_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+vae_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='vae')
 vae_loss = tf.reduce_mean(kl_divergence - log_recon_prob)
 
 update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
-    vae_opt  = tf.train.AdamOptimizer(learning_rate=1E-3).minimize(loss=vae_loss, var_list=vae_vars)
+    vae_opt1  = tf.train.AdamOptimizer(learning_rate=1E-4).minimize(loss=vae_loss, var_list=vae_vars)
+    vae_opt2  = tf.train.AdamOptimizer(learning_rate=1E-5).minimize(loss=vae_loss, var_list=vae_vars)
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
@@ -102,16 +108,21 @@ sess.run(tf.global_variables_initializer())
 train_dat = mnist.train.images
 n_train = len(train_dat)
 
-max_epoch = 100
-minibatch_size = 256
+max_epoch = 250
+minibatch_size = 1000
 
 pbar = tqdm(range(max_epoch))
 
+loss_traj, kld_traj, log_recon_prob_traj = [], [], []
+vae_opt = vae_opt1
 for epoch in pbar:
     train_idx = np.arange(n_train)
     np.random.shuffle(train_idx)
     train_batch = chunks(train_idx, minibatch_size)
     
+    if epoch == 150:
+        vae_opt = vae_opt2
+        
     loss_stack, kld_stack, log_recon_prob_stack = [], [], []
     for batch_idx in train_batch:
         batch_dat = train_dat[batch_idx]
@@ -120,14 +131,20 @@ for epoch in pbar:
         loss_stack.append(batch_loss)
         kld_stack += batch_kld.tolist()
         log_recon_prob_stack += batch_log_recon_prob.tolist()
-        
+
+    loss_traj.append(np.mean(loss_stack))        
+    kld_traj.append(np.mean(kld_stack))
+    log_recon_prob_traj.append(np.mean(log_recon_prob_stack))
+    
     pbar.set_description('Loss: {:.4f} | KLD: {:.4f} | Log-Recon-Prob: {:.4f}'.format(np.mean(loss_stack), np.mean(kld_stack), np.mean(log_recon_prob_stack)))
 
-batch_z = np.random.uniform(-20, 20, size=[16, z_dim])
+batch_z = np.random.uniform(-1, 1, size=[16, z_dim])
+batch_z, z_logvar_ = sess.run([z_mean, z_logvar], feed_dict={x_in:train_dat[np.random.choice(n_train, 16)], is_train: False})
 samples = sess.run(x_mean, feed_dict={z_sample: batch_z, is_train: False})
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt 
 
 plt.figure(figsize=(10, 10))
 for i, sample in enumerate(samples):
     plt.subplot(4, 4, i+1)
     plt.imshow(sample.reshape(28, 28), cmap='gray')
+plt.show()
