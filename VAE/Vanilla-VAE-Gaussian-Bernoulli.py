@@ -84,21 +84,22 @@ def chunks(l, n):
 
 is_train           = tf.placeholder(dtype=tf.bool, name='is_train')
 x_in               = tf.placeholder(dtype=tf.float32, shape=[None, 28, 28, 1])
-x_discrete         = tf.cast(x_in < 0.5, dtype=tf.float32)
+x_discrete         = tf.cast(x_in > 0.5, dtype=tf.float32)
 z_mean, z_logvar   = encoder(x_in)
 z_sample           = sample_from_gaussian(z_mean, z_logvar)
 x_logit            = decoder(z_sample)
 x_prob             = tf.nn.sigmoid(x_logit)
 
 kl_divergence  = -0.5*tf.reduce_sum(1+z_logvar-tf.square(z_mean)-tf.exp(z_logvar), axis=1)
-log_recon_prob = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=x_discrete, logits=x_logit), axis=1)
+#log_recon_prob = -tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=x_discrete, logits=x_logit), axis=1)
+log_recon_prob = tf.reduce_sum(x_prob*x_discrete + (1-x_prob)*(1-x_discrete), axis=[1, 2, 3])
 
 vae_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='vae')
 vae_loss = tf.reduce_mean(kl_divergence - log_recon_prob)
 
 update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
-    vae_opt  = tf.train.AdamOptimizer(learning_rate=1E-4).minimize(loss=vae_loss, var_list=vae_vars)
+    vae_opt  = tf.train.AdamOptimizer(learning_rate=1E-3).minimize(loss=vae_loss, var_list=vae_vars)
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
