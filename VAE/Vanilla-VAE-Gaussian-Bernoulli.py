@@ -9,7 +9,7 @@ Created on Mon Oct 29 23:33:13 2018
          A tensorflow impelementation of Gaussian encoder - Bernoulli decoder variational autoencoder (Kingma and Welling, 2013)
 """
 
-
+import matplotlib.pyplot as plt 
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
@@ -98,7 +98,7 @@ vae_loss = tf.reduce_mean(kl_divergence - log_recon_prob)
 
 update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 with tf.control_dependencies(update_ops):
-    vae_opt  = tf.train.RMSPropOptimizer(learning_rate=1E-4).minimize(loss=vae_loss, var_list=vae_vars)
+    vae_opt  = tf.train.AdamOptimizer(learning_rate=1E-4).minimize(loss=vae_loss, var_list=vae_vars)
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
@@ -108,8 +108,8 @@ sess.run(tf.global_variables_initializer())
 train_dat = mnist.train.images
 n_train = len(train_dat)
 
-max_epoch = 200
-minibatch_size = 1000
+max_epoch = 100
+minibatch_size = 512
 
 pbar = tqdm(range(max_epoch))
 
@@ -133,16 +133,15 @@ for epoch in pbar:
     log_recon_prob_traj.append(np.mean(log_recon_prob_stack))
     
     pbar.set_description('Loss: {:.4f} | KLD: {:.4f} | Log-Recon-Prob: {:.4f}'.format(np.mean(loss_stack), np.mean(kld_stack), np.mean(log_recon_prob_stack)))
+    
+    if epoch % 5 == 0:
+        batch_z, z_logvar_ = sess.run([z_mean, z_logvar], feed_dict={x_in:train_dat[np.random.choice(n_train, 16)], is_train: False})
+        samples = sess.run(x_prob, feed_dict={z_sample: batch_z, is_train: False})
+        plt.figure(figsize=(10, 10))
+        for i, sample in enumerate(samples):
+            plt.subplot(4, 4, i+1)
+            plt.imshow(sample.reshape(28, 28), cmap='gray')
+        plt.show()
 
-batch_z = np.random.uniform(-0.1, 0.1, size=[16, z_dim])
-batch_z, z_logvar_ = sess.run([z_mean, z_logvar], feed_dict={x_in:train_dat[np.random.choice(n_train, 16)], is_train: False})
-samples = sess.run(x_prob, feed_dict={z_sample: batch_z, is_train: False})
-import matplotlib.pyplot as plt 
-
-plt.figure(figsize=(10, 10))
-for i, sample in enumerate(samples):
-    plt.subplot(4, 4, i+1)
-    plt.imshow(sample.reshape(28, 28), cmap='gray')
-plt.show()
 
 plt.plot(log_recon_prob_traj)
