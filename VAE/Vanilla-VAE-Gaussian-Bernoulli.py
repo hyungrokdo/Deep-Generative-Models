@@ -90,8 +90,8 @@ z_sample           = sample_from_gaussian(z_mean, z_logvar)
 x_logit            = decoder(z_sample)
 x_prob             = tf.nn.sigmoid(x_logit)
 
-kl_divergence  = -0.5*tf.reduce_mean(1+z_logvar-tf.square(z_mean)-tf.exp(z_logvar), axis=1)
-log_recon_prob = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=x_discrete, logits=x_logit), axis=1)
+kl_divergence  = -0.5*tf.reduce_sum(1+z_logvar-tf.square(z_mean)-tf.exp(z_logvar), axis=1)
+log_recon_prob = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(labels=x_discrete, logits=x_logit), axis=1)
 
 vae_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='vae')
 vae_loss = tf.reduce_mean(kl_divergence - log_recon_prob)
@@ -134,14 +134,10 @@ for epoch in pbar:
     
     pbar.set_description('Loss: {:.4f} | KLD: {:.4f} | Log-Recon-Prob: {:.4f}'.format(np.mean(loss_stack), np.mean(kld_stack), np.mean(log_recon_prob_stack)))
     
-    if epoch % 5 == 0:
-        batch_z, z_logvar_ = sess.run([z_mean, z_logvar], feed_dict={x_in:train_dat[np.random.choice(n_train, 16)], is_train: False})
-        samples = sess.run(x_prob, feed_dict={z_sample: batch_z, is_train: False})
-        plt.figure(figsize=(10, 10))
-        for i, sample in enumerate(samples):
-            plt.subplot(4, 4, i+1)
-            plt.imshow(sample.reshape(28, 28), cmap='gray')
-        plt.show()
-
-
-plt.plot(log_recon_prob_traj)
+batch_z, z_logvar_ = sess.run([z_mean, z_logvar], feed_dict={x_in:train_dat[np.random.choice(n_train, 16)], is_train: False})
+samples = sess.run(x_prob, feed_dict={z_sample: batch_z, is_train: False})
+plt.figure(figsize=(10, 10))
+for i, sample in enumerate(samples):
+    plt.subplot(4, 4, i+1)
+    plt.imshow(sample.reshape(28, 28), cmap='gray')
+plt.show()
