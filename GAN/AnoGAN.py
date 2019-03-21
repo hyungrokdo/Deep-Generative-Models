@@ -41,7 +41,7 @@ def generator(z_in, use_batchnorm=True, use_bias=True):
                                          kernel_initializer=xavier_init_conv, name='layer4/output', reuse=reuse)
     return tf.tanh(net)
         
-def discriminator(x_in, use_batchnorm=True, use_bias=True):
+def discriminator(x_in, use_batchnorm=False, use_bias=True):
     reuse = tf.AUTO_REUSE
     xavier_init_conv = tf.contrib.layers.xavier_initializer_conv2d(uniform=True)
     with tf.variable_scope('discriminator', reuse=reuse):
@@ -145,7 +145,7 @@ plt.show()
 
 ### AnoGAN - mapping new observations to the latent space
     
-def get_discriminator_feature(x_in, use_batchnorm=True, use_bias=True):
+def get_discriminator_feature(x_in, use_batchnorm=False, use_bias=True):
     reuse = True
     xavier_init_conv = tf.contrib.layers.xavier_initializer_conv2d(uniform=True)
     with tf.variable_scope('discriminator', reuse=reuse):

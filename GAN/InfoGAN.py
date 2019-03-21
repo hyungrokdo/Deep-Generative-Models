@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets('MNIST_data/', one_hot=False, reshape=False)
+z_dim, c_dim = 40, 10
 
 def generator(z_in, use_batchnorm=True, use_bias=True):
     reuse = tf.AUTO_REUSE
@@ -57,20 +58,22 @@ def discriminator(x_in, use_bias=True):
         net = tf.layers.dense(inputs=net, units=100, name='layer3/dense')
         net = tf.nn.leaky_relu(net, name='layer3/act')
         
-        net = tf.layers.dense(inputs=net, units=1, name='layer4/output')
-    return net
+        d_out  = tf.layers.dense(inputs=net, units=1, name='layer4/output')
+        c_out = tf.layers.dense(inputs=net, units=c_dim, name='layer4/output')
+        
+    return d_out, c_out
 
 
 def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i+n]
 
-z_dim = 50
 is_train = tf.placeholder(tf.bool, name='is_train')
 z = tf.placeholder(dtype=tf.float32, shape=[None, z_dim], name='z')
 x = tf.placeholder(dtype=tf.float32, shape=[None, 28, 28, 1])
 G = generator(z)
-D_real, D_fake = discriminator(x), discriminator(G)
+D_real, _ = discriminator(x)
+D_fake, c_fake = discriminator(G)
 
 d_loss_real = tf.nn.sigmoid_cross_entropy_with_logits(logits=D_real, labels=tf.ones_like(D_real))
 d_loss_fake = tf.nn.sigmoid_cross_entropy_with_logits(logits=D_fake, labels=tf.zeros_like(D_fake))
