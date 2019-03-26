@@ -5,6 +5,11 @@ Created on Fri Mar 22 20:56:49 2019
 @author: Hyungrok Do
          hyungrok.do11@gmail.com
          https://github.com/hyungrokdo
+         
+         A tensorflow-layer API implementation of Wasserstein GAN (WGAN)
+         
+         Arjovsky, M., Chintala, S., & Bottou, L. (2017).
+         Wasserstein gan. arXiv preprint arXiv:1701.07875.
 """
 
 import tensorflow as tf

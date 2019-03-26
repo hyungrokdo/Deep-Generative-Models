@@ -6,7 +6,10 @@ Created on Mon Oct 29 23:33:13 2018
          hyungrok.do11@gmail.com
          https://github.com/hyungrokdo
          
-         A tensorflow impelementation of Gaussian encoder - Bernoulli decoder variational autoencoder (Kingma and Welling, 2013)
+         A tensorflow-layer API implementation of Variational Autoencoder (VAE) - Gaussian encoder / Bernoulli decoder
+
+         Kingma, D. P., & Welling, M. (2013).
+         Auto-encoding variational bayes. arXiv preprint arXiv:1312.6114.
 """
 
 import matplotlib.pyplot as plt 

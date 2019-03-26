@@ -5,6 +5,13 @@ Created on Mon Oct 29 12:48:20 2018
 @author: Hyungrok Do
          hyungrok.do11@gmail.com
          https://github.com/hyungrokdo
+         
+         A tensorflow-layer API implementation of AnoGAN
+         
+         Donahue, J., Krähenbühl, P., & Darrell, T. (2016).
+         Schlegl, T., Seeböck, P., Waldstein, S. M., Schmidt-Erfurth, U., & Langs, G. (2017, June).
+         Unsupervised anomaly detection with generative adversarial networks to guide marker discovery.
+         In International Conference on Information Processing in Medical Imaging (pp. 146-157). Springer, Cham.
 """
 
 import tensorflow as tf

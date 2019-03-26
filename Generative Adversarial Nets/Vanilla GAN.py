@@ -5,6 +5,11 @@ Created on Sun Oct 28 14:06:32 2018
 @author: Hyungrok Do
          hyungrok.do11@gmail.com
          https://github.com/hyungrokdo
+         
+         A tensorflow-layer API implementation of Generative Adversarial Nets (GAN)
+         
+         Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S., ... & Bengio, Y. (2014).
+         Generative adversarial nets. In Advances in neural information processing systems (pp. 2672-2680).
 """
 
 import tensorflow as tf

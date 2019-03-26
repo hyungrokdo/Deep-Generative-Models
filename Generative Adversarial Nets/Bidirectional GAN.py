@@ -5,6 +5,11 @@ Created on Mon Mar 25 14:54:51 2019
 @author: Hyungrok Do
          hyungrok.do11@gmail.com
          https://github.com/hyungrokdo
+         
+         A tensorflow-layer API implementation of Bidirectional GAN (BiGAN)
+         
+         Donahue, J., Krähenbühl, P., & Darrell, T. (2016).
+         Adversarial feature learning. arXiv preprint arXiv:1605.09782.
 """
 
 import tensorflow as tf

@@ -5,6 +5,11 @@ Created on Sun Oct 28 14:06:32 2018
 @author: Hyungrok Do
          hyungrok.do11@gmail.com
          https://github.com/hyungrokdo
+                  
+         A tensorflow-layer API implementation of Information Maximizing GAN (InfoGAN)
+         
+         Chen, X., Duan, Y., Houthooft, R., Schulman, J., Sutskever, I., & Abbeel, P. (2016).
+         Infogan: Interpretable representation learning by information maximizing generative adversarial nets. In Advances in neural information processing systems (pp. 2172-2180).
 """
 
 import tensorflow as tf

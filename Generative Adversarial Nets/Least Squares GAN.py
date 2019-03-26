@@ -5,6 +5,11 @@ Created on Fri Mar 22 19:23:32 2019
 @author: Hyungrok Do
          hyungrok.do11@gmail.com
          https://github.com/hyungrokdo
+         
+         A tensorflow-layer API implementation of Least Squares GAN (LSGAN)
+         
+         Mao, X., Li, Q., Xie, H., Lau, R. Y., Wang, Z., & Paul Smolley, S. (2017).
+         Least squares generative adversarial networks. In Proceedings of the IEEE International Conference on Computer Vision (pp. 2794-2802).
 """
 
 import tensorflow as tf

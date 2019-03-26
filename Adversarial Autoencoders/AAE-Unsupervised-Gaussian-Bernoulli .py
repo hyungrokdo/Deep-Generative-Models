@@ -6,7 +6,10 @@ Created on Mon Oct 29 10:41:15 2018
          hyungrok.do11@gmail.com
          https://github.com/hyungrokdo
          
-         A tensorflow impelementation of Gaussian encoder - Gaussian decoder adversarial autoencoder (Kingma and Welling, 2013)
+         A tensorflow-layer API implementation of Adversarial Autoencoder (AAE) - Gaussian encoder / Bernoulli decoder
+
+         Makhzani, A., Shlens, J., Jaitly, N., Goodfellow, I., & Frey, B. (2015).
+         Adversarial autoencoders. arXiv preprint arXiv:1511.05644.
 """
 
 import matplotlib.pyplot as plt 

@@ -5,6 +5,11 @@ Created on Fri Mar 22 12:35:48 2019
 @author: Hyungrok Do
          hyungrok.do11@gmail.com
          https://github.com/hyungrokdo
+         
+         A tensorflow-layer API implementation of Energy-based GAN (EBGAN)
+         
+         Zhao, J., Mathieu, M., & LeCun, Y. (2016).
+         Energy-based generative adversarial network. arXiv preprint arXiv:1609.03126.
 """
 
 import matplotlib.pyplot as plt
